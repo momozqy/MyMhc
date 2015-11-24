@@ -1,0 +1,4 @@
+*.rar
+MyMhc/results
+MyMhc/.*
+MyMhc/Makefile

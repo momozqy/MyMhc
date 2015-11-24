@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
+  <inputs>
+    <inputs name="/MyMhc/results/General-*.vec"/>
+    <inputs name="/MyMhc/results/General-*.sca"/>
+  </inputs>
+  <datasets>
+    <datasets name="test">
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node3) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node42) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node40) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="node1_4" lineNameFormat="">
+        <properties name="Line.Name/XTC.node1" value="XTC.node1"/>
+        <properties name="Line.Name/XTC.node40" value="XTC.node40"/>
+      </items>
+      <items xsi:type="scave:LineChart" name="node4" lineNameFormat=""/>
+    </datasets>
+  </datasets>
+  <chartSheets>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4"/>
+  </chartSheets>
+</scave:Analysis>

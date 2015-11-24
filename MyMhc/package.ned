@@ -1,0 +1,3 @@
+package mymhc;
+
+@license(LGPL);
