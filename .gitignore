@@ -2,3 +2,5 @@
 MyMhc/results
 MyMhc/.*
 MyMhc/Makefile
+*.exe
+MyMhc/out
