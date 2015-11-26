@@ -31,6 +31,7 @@ struct NeibNodes
     int ogate;  //the outgate of current module connect to the neib node's ingate.
 //  int igate;  //the ingate of current module connect to the neib node's ingate.
     int hop;
+    int oldlqi;
     int powerlimit;
     int lqi;
     int neibEnergy;
@@ -71,10 +72,11 @@ public:
     virtual bool deleteFromNeib(int p);
     virtual int outGatesDetect(int nodeindex);
     virtual void changeFatherPower(int fahterid,int power);
-    virtual void fuzzyChangePower(int lqi,int oldlqi,int power);
+    virtual int fuzzyChangePower(int lqi,int oldlqi,int power);
     virtual int fuzzyGetLqi(int power);
     virtual int fuzzy(int lqi,int id);
     virtual double getLi(int a,int b,int lqi);
+    virtual int countPower(int num);
     virtual void initialDegree();
 };
 Define_Module(MyXtc);
