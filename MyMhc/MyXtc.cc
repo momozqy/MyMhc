@@ -23,6 +23,7 @@ MyXtc::MyXtc() {
 MyXtc::~MyXtc() {
     // TODO Auto-generated destructor stub
 }
+
 //获得当前节点的ID
 int MyXtc::getMyIndex(char* name) {
     int index = 0;
@@ -30,6 +31,17 @@ int MyXtc::getMyIndex(char* name) {
     name = name + 4;
     index = atoi(name);
     return index;
+}
+/*
+ * 实现高斯分布
+ */
+double MyXtc::Gaussian_distribution(double u, double o, double x) {
+    //正态分布公式钱的系数
+    double k = 1.0 / (sqrt(2 * PI) * o);
+    //正态分布的幂数
+    double min = pow(x - u, 2) / (-2.0 * o * o);
+
+    return k * exp(min);
 }
 void MyXtc::initialize() {
     idex = getMyIndex((char*) getName());
@@ -151,7 +163,7 @@ void MyXtc::handleMessage(cMessage *msg) {
             ev << "start to send a ack msg" << endl;
             mhcMessage *ack = ttmsg->dup();
             char msgname[20];
-            sprintf(msgname, "ack-%d-to-back",node) ;
+            sprintf(msgname, "ack-%d-to-back", node);
             ack->setMsgType(2);
             //根据这个power得到相应的lqi
             int power = ttmsg->getPower();
@@ -168,7 +180,7 @@ void MyXtc::handleMessage(cMessage *msg) {
             //找到相应的节点发射ack消息。
             int outgateindex = outGatesDetect(node);
             ev << node << "  " << outgateindex << endl;
-            ev << "using" <<power<< "send ack msg"<<endl;
+            ev << "using" << power << "send ack msg" << endl;
             ack->setName(msgname);
             send(ack, "gate$o", outgateindex);
         }
@@ -196,24 +208,27 @@ void MyXtc::handleMessage(cMessage *msg) {
         //使用这两个值可以 使用模糊调节进行功率调节
         //int newpower = getPower(LQI,POWER);
         int index = isExistInNeib(fatherid);
-        int old = neighbors[index-1].oldlqi;
-        if(old<0)
-        {
-            neighbors[index-1].oldlqi = lqi;
-            neighbors[index-1].lqi = lqi;
-        }
-        else{
+        int old = neighbors[index - 1].oldlqi;
+        if (old < 0) {
+            neighbors[index - 1].oldlqi = lqi;
+            neighbors[index - 1].lqi = lqi;
+        } else {
             int adj = 0;
-            ev << "LQI is "<<lqi<<" oldLQI is "<<neighbors[index-1].lqi<<endl;
+            ev << "LQI is " << lqi << " oldLQI is " << neighbors[index - 1].lqi
+                    << endl;
             ev << "before power is " << power << endl;
-            if (index != -1) {
-                //使用模糊算法调节功率
-                adj = fuzzyChangePower(lqi, neighbors[index-1].lqi, power);
-                neighbors[index-1].lqi = lqi;
-                power = power + adj;
-                neighbors[index-1].powerlimit = power;
-                ev << "neighbors["<<index<<"].powerlimit="<<power<<endl;
-            }
+            /*     if (index != -1) {
+             //使用模糊算法调节功率
+             adj = fuzzyChangePower(lqi, neighbors[index-1].lqi, power);
+             neighbors[index-1].lqi = lqi;
+             power = power + adj;
+             if(power>30)
+             power = 30;
+             if(power<=0)
+             power = 1;
+             neighbors[index-1].powerlimit = power;
+             ev << "neighbors["<<index<<"].powerlimit="<<power<<endl;
+             }*/
             ev << lqi << endl;
             delete ttmsg;
         }
@@ -362,7 +377,7 @@ int MyXtc::fuzzyChangePower(int lqi, int oldlqi, int power) {
     }
     int adj = 0;
     if (sum != 0)
-        adj = (BStep + SStep + TStep) / sum;
+        adj = floor((BStep + SStep + TStep) / sum);
     ev << "sum = " << sum << endl;
     ev << "adj = " << adj << endl;
     return adj;
@@ -370,40 +385,40 @@ int MyXtc::fuzzyChangePower(int lqi, int oldlqi, int power) {
 int MyXtc::fuzzy(int lqi, int id) {
 //    bool *list = new bool[5];
     int res = 0;
-    if (lqi >= 50 && lqi <= 70) {
+    if (lqi >= 50 && lqi <= 65) {
         res += 1;
         if (id)
-            odegree[0] = ((double) (70 - lqi)) / ((double) 20);
+            odegree[0] = ((double) (65 - lqi)) / ((double) 15);
         else
-            degree[0] = ((double) (70 - lqi)) / ((double) 20);
+            degree[0] = ((double) (65 - lqi)) / ((double) 15);
     }
     if (lqi >= 60 && lqi <= 80) {
         res += 2;
         if (id)
-            odegree[1] = getLi(60, 80, lqi);
+            odegree[1] = Gaussian_distribution(70.0, 10.0 / 3, (double) lqi);
         else
-            degree[1] = getLi(60, 80, lqi);
+            degree[1] = Gaussian_distribution(70.0, 10.0 / 3, (double) lqi);
     }
     if (lqi >= 70 && lqi <= 90) {
         res += 4;
         if (id)
-            odegree[2] = getLi(70, 90, lqi);
+            odegree[2] = Gaussian_distribution(80.0, 10.0 / 3, (double) lqi);
         else
-            degree[2] = getLi(70, 90, lqi);
+            degree[2] = Gaussian_distribution(80.0, 10.0 / 3, (double) lqi);
     }
     if (lqi >= 80 && lqi <= 100) {
         res += 8;
         if (id)
-            odegree[3] = getLi(80, 100, lqi);
+            odegree[3] = Gaussian_distribution(90.0, 10.0 / 3, (double) lqi);
         else
-            degree[3] = getLi(80, 100, lqi);
+            degree[3] = Gaussian_distribution(90.0, 10.0 / 3, (double) lqi);
     }
-    if (lqi >= 90 && lqi <= 110) {
+    if (lqi >= 95 && lqi <= 110) {
         res += 16;
         if (id)
-            odegree[4] = ((double) (lqi - 90)) / ((double) 20);
+            odegree[4] = ((double) (lqi - 95)) / ((double) 15);
         else
-            degree[4] = ((double) (lqi - 90)) / ((double) 20);
+            degree[4] = ((double) (lqi - 95)) / ((double) 15);
     }
     return res;
 }
@@ -576,15 +591,16 @@ void MyXtc::forwardDataMessage(mhcMessage *msg) {
     int power = 30;
     ev << "gate out size n=" << n << endl;
     int i;
-    ev<<"neibCount" << neibCount<<endl;
+    ev << "neibCount" << neibCount << endl;
     for (i = 0; i < neibCount; i++) {
-        int j = intuniform(i,neibCount-1);
+        int j = intuniform(i, neibCount - 1);
         if (neighbors[j].hop < localCount) {
             int k = neighbors[j].ogate;
 
             power = neighbors[j].powerlimit;
             msg->setPower(power);
-            ev<<"using neighbors["<<j<<"]"<<"powerlimit="<<power<<endl;
+            ev << "using neighbors[" << j << "]" << "powerlimit=" << power
+                    << endl;
             ev << "Forwarding message " << msg << " on port out[" << k << "]\n";
             send(msg, "gate$o", k);
             break;

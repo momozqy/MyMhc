@@ -23,7 +23,7 @@
 #include <cgate.h>
 #include "mhcMessage_m.h"
 #define NEIBNUM 10
-#define INIENERGY 30000  //the initial energy a node have
+#define INIENERGY 3000  //the initial energy a node have
 
 struct NeibNodes
 {
@@ -74,6 +74,7 @@ public:
     virtual void changeFatherPower(int fahterid,int power);
     virtual int fuzzyChangePower(int lqi,int oldlqi,int power);
     virtual int fuzzyGetLqi(int power);
+    virtual double Gaussian_distribution(double u,double o,double x);
     virtual int fuzzy(int lqi,int id);
     virtual double getLi(int a,int b,int lqi);
     virtual int countPower(int num);
