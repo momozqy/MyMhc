@@ -46,6 +46,7 @@ private:
     int energy; //current node's energy.
     int flag;
     int iniTemp;
+    bool flag2;
     int idex;
     int myPower;
     int neibCount; //the number of neibghours.
@@ -55,8 +56,14 @@ private:
 //    cOutVector hopCountVector;
     cLongHistogram energyStats;
     cOutVector nodeEnergy;
+    cLongHistogram numsStats;
+    cOutVector nodenumsV;
 public:
     MyXtc();
+    static int nodenums;
+    static void init(){
+        nodenums = 5;
+    }
     virtual ~MyXtc();
     virtual int getMyIndex(char* name);
     virtual void initialize();

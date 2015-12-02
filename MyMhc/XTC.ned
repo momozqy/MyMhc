@@ -17,6 +17,8 @@ package mymhc;
 
 network XTC
 {
+    parameters:
+        int numnodes = 60;
     @display("bgb=1000,1000");
     types:
         channel Channel extends ned.DelayChannel

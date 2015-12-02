@@ -14,10 +14,9 @@
 //
 
 #include <MyXtc.h>
-
+int MyXtc::nodenums = 5;
 MyXtc::MyXtc() {
     // TODO Auto-generated constructor stub
-
 }
 
 MyXtc::~MyXtc() {
@@ -54,17 +53,20 @@ void MyXtc::initialize() {
     energy = INIENERGY;
     initializeNeib(); //initialize parents list
     flag = 0;
+    flag2 = true;
     WATCH(numSent);
     WATCH(numReceived);
     WATCH(localCount);
     WATCH(numLocalSent);
     WATCH(energy);
     WATCH(degree);
+    WATCH(MyXtc::nodenums);
     WATCH(odegree);
     WATCH(neighbors);
     energyStats.setName("hopCountStats");
     nodeEnergy.setName("nodeEnergy");
-
+    numsStats.setName("nodestats");
+    nodenumsV.setName("nodenums");
     // Module 0 sends the first message
     //设置基站节点
     // network setup phrase , gateway(node index=0) send its hopcount to the node at layer 2.
@@ -96,7 +98,13 @@ void MyXtc::handleMessage(cMessage *msg) {
     ev << "msg type is : " << mType << endl;
 
     int totalCount = ttmsg->getTotalCount();
-
+    if(flag2&&energy<30){
+        MyXtc::nodenums = MyXtc::nodenums - 1;
+        flag2 =false;
+        return;
+    }
+    if(energy<30)
+        return;
 //    hopCountStats.collect(totalCount);
 
     int node;
@@ -132,7 +140,6 @@ void MyXtc::handleMessage(cMessage *msg) {
                             ttmsg->getRestEnergy());
                 }
                 printNeib();
-
 //                ev << "run to forward" << endl;
 //                ev << "totalcount : " << ttmsg->getTotalCount() << endl;
                 forwardHopMessage(ttmsg);
@@ -197,7 +204,7 @@ void MyXtc::handleMessage(cMessage *msg) {
         } else {
             forwardDataMessage(ttmsg);
         }
-    } else {
+    } else if(mType == 2 && energy > 30){
         //如果是ack消息
         int lqi = ttmsg->getLqi();
         int fatherid = ttmsg->getSource();
@@ -235,6 +242,8 @@ void MyXtc::handleMessage(cMessage *msg) {
     }
     nodeEnergy.record(energy);
     energyStats.collect(energy);
+    nodenumsV.record(MyXtc::nodenums);
+    numsStats.collect(MyXtc::nodenums);
 }
 void MyXtc::initialDegree() {
     for (int i = 0; i < 5; i++) {
