@@ -217,18 +217,18 @@ void MyXtc::handleMessage(cMessage *msg) {
             ev << "LQI is " << lqi << " oldLQI is " << neighbors[index - 1].lqi
                     << endl;
             ev << "before power is " << power << endl;
-            /*     if (index != -1) {
-             //使用模糊算法调节功率
-             adj = fuzzyChangePower(lqi, neighbors[index-1].lqi, power);
-             neighbors[index-1].lqi = lqi;
-             power = power + adj;
-             if(power>30)
-             power = 30;
-             if(power<=0)
-             power = 1;
-             neighbors[index-1].powerlimit = power;
-             ev << "neighbors["<<index<<"].powerlimit="<<power<<endl;
-             }*/
+            if (index != -1) {
+                //使用模糊算法调节功率
+                adj = fuzzyChangePower(lqi, neighbors[index - 1].lqi, power);
+                neighbors[index - 1].lqi = lqi;
+                power = power + adj;
+                if (power > 30)
+                    power = 30;
+                if (power <= 0)
+                    power = 1;
+                neighbors[index - 1].powerlimit = power;
+                ev << "neighbors[" << index << "].powerlimit=" << power << endl;
+            }
             ev << lqi << endl;
             delete ttmsg;
         }
