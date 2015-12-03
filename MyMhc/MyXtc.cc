@@ -14,7 +14,7 @@
 //
 
 #include <MyXtc.h>
-int MyXtc::nodenums = 5;
+int MyXtc::nodenums = 60;
 MyXtc::MyXtc() {
     // TODO Auto-generated constructor stub
 }
@@ -54,6 +54,7 @@ void MyXtc::initialize() {
     initializeNeib(); //initialize parents list
     flag = 0;
     flag2 = true;
+    flag3 = true;
     WATCH(numSent);
     WATCH(numReceived);
     WATCH(localCount);
@@ -70,7 +71,7 @@ void MyXtc::initialize() {
     // Module 0 sends the first message
     //设置基站节点
     // network setup phrase , gateway(node index=0) send its hopcount to the node at layer 2.
-    if (idex == 1) //tic0 send a message first,so begin the program,like startcontrol in micaz
+    if (idex == SINK) //tic0 send a message first,so begin the program,like startcontrol in micaz
             {
         localCount = 0;
         iniTemp = 1;
@@ -78,7 +79,7 @@ void MyXtc::initialize() {
         mhcMessage *msg = generateMessage(0);
         scheduleAt(0.0, msg);
     }
-    if (idex != 1) {
+    if (idex != SINK) {
         int n = size();
         ev << "modules size : " << n << endl;
         ev << "!!!!!!!!!!!!!!ordinary node send data!!!!!!!!!!!!!!!!!!!"
@@ -96,17 +97,8 @@ void MyXtc::handleMessage(cMessage *msg) {
     ev << "localCount is " << localCount << " hops.\n";
     int mType = ttmsg->getMsgType();
     ev << "msg type is : " << mType << endl;
-
-    int totalCount = ttmsg->getTotalCount();
-    if(flag2&&energy<30){
-        MyXtc::nodenums = MyXtc::nodenums - 1;
-        flag2 =false;
-        return;
-    }
-    if(energy<30)
-        return;
 //    hopCountStats.collect(totalCount);
-
+    int totalCount = ttmsg->getTotalCount();
     int node;
     if (ttmsg->getForward() == 100) //get the real forward node or the source node
             {
@@ -119,7 +111,7 @@ void MyXtc::handleMessage(cMessage *msg) {
     if (mType == 0 && energy > 30) //receive hopcount broadcast message,decide to accept as parent or not
             {
 
-        if (idex != 1) //current node is not the sink(index=0)
+        if (idex != SINK) //current node is not the sink(index=0)
                 {
             int hopcount = ttmsg->getHopCount();
             ev << "hopcount in msg is" << hopcount << endl;
@@ -146,11 +138,15 @@ void MyXtc::handleMessage(cMessage *msg) {
             } else {
 //                ev << "the newest hop yet." << endl;
 //                ev << "totalcount : " << ttmsg->getTotalCount() << endl;
+                int outgateindex = outGatesDetect(node);
+                if (isExistInNeib(node) == -1)
+                    addToNeib(node, outgateindex, hopcount,
+                            ttmsg->getRestEnergy());
             }
         }
         //if sink receive broadcastmsg as the first time ,forward it
         //if sink receive the msg from its son ,ignore the msg
-        else if (idex == 1 && iniTemp == 1) //avoid the schedualat time
+        else if (idex == SINK && iniTemp == 1) //avoid the schedualat time
                 {
             iniTemp--;
             ev << "index 1 forward" << endl;
@@ -158,69 +154,79 @@ void MyXtc::handleMessage(cMessage *msg) {
             forwardHopMessage(ttmsg);
         } else
             ev << "receive already." << endl;
-    } else if (mType == 1 && energy > 30) //receive data message
+    } else if (mType == 1) //receive data message
             {
-        ev << "----------------receive data----------------------" << endl;
-        ev << "source node is : " << ttmsg->getSource() << endl;
-        ev << "current node is : " << idex << endl;
-        ev << "destinate node is : " << ttmsg->getDestination() << endl;
-        ev << "the hop current msg used: " << ttmsg->getTotalCount() << endl;
-        printNeib();
-        if (!ttmsg->isSelfMessage()) {
-            ev << "start to send a ack msg" << endl;
-            mhcMessage *ack = ttmsg->dup();
-            char msgname[20];
-            sprintf(msgname, "ack-%d-to-back", node);
-            ack->setMsgType(2);
-            //根据这个power得到相应的lqi
-            int power = ttmsg->getPower();
-            int lqi = fuzzyGetLqi(power);
-            //这里可以修改得到LQI值的方法。已经
-            //把产生的lqi的值存在ack消息中发射过去。
-            ack->setLqi(lqi);
-            //这里使用调节好的功率发射过去。
-//                ack->setPower();
-            //设置发射过来节点的功率。
-            ack->setOldpower(power);
-            ack->setSource(idex);
-            energy = energy - power;
-            //找到相应的节点发射ack消息。
-            int outgateindex = outGatesDetect(node);
-            ev << node << "  " << outgateindex << endl;
-            ev << "using" << power << "send ack msg" << endl;
-            ack->setName(msgname);
-            send(ack, "gate$o", outgateindex);
-        }
-        if (ttmsg->getDestination() == idex) {
-            //int totalCount = ttmsg->getTotalCount();
-            ev << "Message " << ttmsg << " arrived ater " << totalCount
-                    << " hops.\n";
-            numReceived++;
-            //nodeEnergy.record(energy);
-            //hopCountStats.collect(totalCount);
-            ev << "numReceived is " << numReceived << " .\n";
-            delete ttmsg;
-            bubble("ARRIVED, starting new one!");
-        } else {
-            forwardDataMessage(ttmsg);
-        }
-    } else if(mType == 2 && energy > 30){
+            ev << "----------------receive data----------------------" << endl;
+            ev << "source node is : " << ttmsg->getSource() << endl;
+            ev << "current node is : " << idex << endl;
+            ev << "destinate node is : " << ttmsg->getDestination() << endl;
+            ev << "the hop current msg used: " << ttmsg->getTotalCount()
+                    << endl;
+            printNeib();
+            if (!ttmsg->isSelfMessage()) {
+                ev << "start to send a ack msg" << endl;
+                mhcMessage *ack = ttmsg->dup();
+                char msgname[20];
+                sprintf(msgname, "ack-%d-to-back", node);
+                ack->setMsgType(2);
+                ack->setSource(idex);
+                //根据这个power得到相应的lqi
+                int power = ttmsg->getPower();
+                int lqi = fuzzyGetLqi(power);
+                //这里可以修改得到LQI值的方法。已经
+                //把产生的lqi的值存在ack消息中发射过去。
+                ack->setLqi(lqi);
+                ev << "here I will save the energy is " << energy << endl;
+                ack->setRestEnergy(energy);
+                //这里使用调节好的功率发射过去。
+                //                ack->setPower();
+                //设置发射过来节点的功率。
+                ack->setOldpower(power);
+                /*if(energy>30)
+                 energy = energy - power;*/
+                //找到相应的节点发射ack消息。
+                int outgateindex = outGatesDetect(node);
+                ev << node << "  " << outgateindex << endl;
+                ev << "using" << power << "send ack msg" << endl;
+                ack->setName(msgname);
+                send(ack, "gate$o", outgateindex);
+            }
+            if (ttmsg->getDestination() == idex) {
+                //int totalCount = ttmsg->getTotalCount();
+                ev << "Message " << ttmsg << " arrived ater " << totalCount
+                        << " hops.\n";
+                numReceived++;
+                //nodeEnergy.record(energy);
+                //hopCountStats.collect(totalCount);
+                ev << "numReceived is " << numReceived << " .\n";
+                delete ttmsg;
+                bubble("ARRIVED, starting new one!");
+            } else {
+                forwardDataMessage(ttmsg);
+            }
+    } else if (mType == 2 && energy > 30) {
         //如果是ack消息
         int lqi = ttmsg->getLqi();
+
         int fatherid = ttmsg->getSource();
         //这里得到发射ack的功率。
-        ev << "收到ack 消息" << endl;
+
+        ev << "recevie ack msg" << endl;
+        ev << " come from " << fatherid << "id ackmsg" << endl;
         int power = ttmsg->getOldpower();
         //这里得到之前的发射功率，以及发射到父节点的产生的Lqi值。
         //使用这两个值可以 使用模糊调节进行功率调节
         //int newpower = getPower(LQI,POWER);
         int index = isExistInNeib(fatherid);
+        if (index != -1)
+            neighbors[index - 1].neibEnergy = ttmsg->getRestEnergy();
+        printNeib();
         int old = neighbors[index - 1].oldlqi;
         if (old < 0) {
             neighbors[index - 1].oldlqi = lqi;
             neighbors[index - 1].lqi = lqi;
         } else {
-            int adj = 0;
+            /*int adj = 0;
             ev << "LQI is " << lqi << " oldLQI is " << neighbors[index - 1].lqi
                     << endl;
             ev << "before power is " << power << endl;
@@ -236,10 +242,20 @@ void MyXtc::handleMessage(cMessage *msg) {
                 neighbors[index - 1].powerlimit = power;
                 ev << "neighbors[" << index << "].powerlimit=" << power << endl;
             }
-            ev << lqi << endl;
+            ev << lqi << endl;*/
             delete ttmsg;
         }
     }
+    if(flag2&&!flag3){
+        MyXtc::nodenums = MyXtc::nodenums - 1;
+        flag2 = false;
+    }
+    if (flag2 && energy < 30) {
+        MyXtc::nodenums = MyXtc::nodenums - 1;
+        flag2 = false;
+    }
+    if(energy<30||!flag3)
+        return;
     nodeEnergy.record(energy);
     energyStats.collect(energy);
     nodenumsV.record(MyXtc::nodenums);
@@ -526,7 +542,7 @@ mhcMessage *MyXtc::generateMessage(int type) {
     //构造传输消息
     else if (type == 1) //data package
             {
-        dest = 1;
+        dest = SINK;
         sprintf(msgname, "node-%d-to-sink", src);
         mhcMessage *msg = new mhcMessage(msgname);
         msg->setMsgType(type);
@@ -601,22 +617,25 @@ void MyXtc::forwardDataMessage(mhcMessage *msg) {
     ev << "gate out size n=" << n << endl;
     int i;
     ev << "neibCount" << neibCount << endl;
+    bool x = false;
     for (i = 0; i < neibCount; i++) {
-        int j = intuniform(i, neibCount - 1);
-        if (neighbors[j].hop < localCount) {
-            int k = neighbors[j].ogate;
-
-            power = neighbors[j].powerlimit;
+//        int j = intuniform(i, neibCount - 1);
+        int k = neighbors[i].ogate;
+        if (neighbors[i].hop <= localCount && neighbors[i].neibEnergy > 30) {
+            power = neighbors[i].powerlimit;
             msg->setPower(power);
-            ev << "using neighbors[" << j << "]" << "powerlimit=" << power
+            ev << "using neighbors[" << i << "]" << "powerlimit=" << power
                     << endl;
             ev << "Forwarding message " << msg << " on port out[" << k << "]\n";
             send(msg, "gate$o", k);
+            ev << "using power level is " << power << endl;
+            energy = energy - power;
+            x = true;
             break;
         }
     }
-    ev << "using power level is " << power << endl;
-    energy = energy - power;
+    if(!x)
+        flag3 = false;
 }
 void MyXtc::initializeNeib() {
     int i = 0;
@@ -624,7 +643,7 @@ void MyXtc::initializeNeib() {
         neighbors[i].nodeId = -1;
         neighbors[i].ogate = -1;
         neighbors[i].hop = 1000;
-        neighbors[i].neibEnergy = -1;
+        neighbors[i].neibEnergy = 1500;
         neighbors[i].powerlimit = 30;
         neighbors[i].oldlqi = -1;
         neighbors[i].lqi = 90;

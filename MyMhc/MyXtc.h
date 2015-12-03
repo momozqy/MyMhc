@@ -23,7 +23,8 @@
 #include <cgate.h>
 #include "mhcMessage_m.h"
 #define NEIBNUM 10
-#define INIENERGY 3000  //the initial energy a node have
+#define SINK 1
+#define INIENERGY 15000  //the initial energy a node have
 
 struct NeibNodes
 {
@@ -39,6 +40,8 @@ struct NeibNodes
 class MyXtc: public cSimpleModule {
 private:
     long numSent;
+    //
+    bool flag3;
     long numReceived;
     long numLocalSent;//send msg number as source
     NeibNodes neighbors[NEIBNUM];
