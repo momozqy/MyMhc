@@ -23,9 +23,8 @@
 #include <cgate.h>
 #include "mhcMessage_m.h"
 #define NEIBNUM 10
-#define SINK 1
 #define INIENERGY 15000  //the initial energy a node have
-
+#define SINK 1
 struct NeibNodes
 {
     int nodeId;
@@ -40,8 +39,6 @@ struct NeibNodes
 class MyXtc: public cSimpleModule {
 private:
     long numSent;
-    //
-    bool flag3;
     long numReceived;
     long numLocalSent;//send msg number as source
     NeibNodes neighbors[NEIBNUM];
@@ -50,6 +47,11 @@ private:
     int flag;
     int iniTemp;
     bool flag2;
+    bool flag3;
+    //标记Sink是否收到过数据包
+    int counts;
+    bool isRe;
+    cMessage *cmsg;
     int idex;
     int myPower;
     int neibCount; //the number of neibghours.

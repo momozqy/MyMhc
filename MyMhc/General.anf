@@ -3,20 +3,36 @@
   <inputs>
     <inputs name="/MyMhc/results/General-*.vec"/>
     <inputs name="/MyMhc/results/General-*.sca"/>
+    <inputs name="/MyMhc/results/MyMAX-0.vec"/>
+    <inputs name="/MyMhc/results/MyMAX-0.sca"/>
   </inputs>
   <datasets>
     <datasets name="test">
-      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node3) AND name(nodeEnergy)" type="VECTOR"/>
-      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node42) AND name(nodeEnergy)" type="VECTOR"/>
-      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node40) AND name(nodeEnergy)" type="VECTOR"/>
-      <items xsi:type="scave:LineChart" name="node1_4" lineNameFormat="">
-        <properties name="Line.Name/XTC.node1" value="XTC.node1"/>
-        <properties name="Line.Name/XTC.node40" value="XTC.node40"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/MyMAX-0.vec) AND attr:configname(MyMAX) AND attr:runnumber(0) AND module(MyMAX.node31) AND name(nodenums)" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node31) AND name(nodenums)" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="Compare_NetWorkLife" lineNameFormat="">
+        <properties name="Graph.Title" value="NetWork LifeTime"/>
+        <properties name="X.Axis.Title" value="Time(Seconds)"/>
+        <properties name="Y.Axis.Title" value="Number of Alive nodes"/>
+        <properties name="Legend.Display" value="true"/>
+        <properties name="Legend.Position" value="Inside"/>
+        <properties name="Legend.Anchoring" value="NorthEast"/>
       </items>
-      <items xsi:type="scave:LineChart" name="node4" lineNameFormat=""/>
+    </datasets>
+    <datasets name="energy">
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/MyMAX-0.vec) AND attr:configname(MyMAX) AND attr:runnumber(0) AND module(MyMAX.node31) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/General-0.vec) AND attr:configname(General) AND attr:runnumber(0) AND module(XTC.node31) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="Energy" lineNameFormat="">
+        <properties name="Graph.Title" value="Energy"/>
+        <properties name="X.Axis.Title" value="Time(Seconds)"/>
+        <properties name="Y.Axis.Title" value="Energy(J)"/>
+        <properties name="Legend.Display" value="true"/>
+        <properties name="Legend.Position" value="Inside"/>
+        <properties name="Legend.Anchoring" value="NorthEast"/>
+      </items>
     </datasets>
   </datasets>
   <chartSheets>
-    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.4"/>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.2 //@datasets/@datasets.1/@items.2"/>
   </chartSheets>
 </scave:Analysis>

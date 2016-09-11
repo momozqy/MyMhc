@@ -50,11 +50,13 @@ void MyXtc::initialize() {
     localCount = 100;
     neibCount = 0; //ÁÚ¾ÓµÄ¸öÊý
     myPower = 30;
+    counts = 0;
     energy = INIENERGY;
     initializeNeib(); //initialize parents list
     flag = 0;
     flag2 = true;
     flag3 = true;
+    isRe = true;
     WATCH(numSent);
     WATCH(numReceived);
     WATCH(localCount);
@@ -64,6 +66,7 @@ void MyXtc::initialize() {
     WATCH(MyXtc::nodenums);
     WATCH(odegree);
     WATCH(neighbors);
+    cmsg = new cMessage();
     energyStats.setName("hopCountStats");
     nodeEnergy.setName("nodeEnergy");
     numsStats.setName("nodestats");
@@ -196,6 +199,7 @@ void MyXtc::handleMessage(cMessage *msg) {
                 ev << "Message " << ttmsg << " arrived ater " << totalCount
                         << " hops.\n";
                 numReceived++;
+                isRe = true;
                 //nodeEnergy.record(energy);
                 //hopCountStats.collect(totalCount);
                 ev << "numReceived is " << numReceived << " .\n";
@@ -226,7 +230,7 @@ void MyXtc::handleMessage(cMessage *msg) {
             neighbors[index - 1].oldlqi = lqi;
             neighbors[index - 1].lqi = lqi;
         } else {
-            /*int adj = 0;
+            int adj = 0;
             ev << "LQI is " << lqi << " oldLQI is " << neighbors[index - 1].lqi
                     << endl;
             ev << "before power is " << power << endl;
@@ -242,24 +246,31 @@ void MyXtc::handleMessage(cMessage *msg) {
                 neighbors[index - 1].powerlimit = power;
                 ev << "neighbors[" << index << "].powerlimit=" << power << endl;
             }
-            ev << lqi << endl;*/
+            ev << lqi << endl;
             delete ttmsg;
         }
     }
-    if(flag2&&!flag3){
+    /*if(flag2&&!flag3){
         MyXtc::nodenums = MyXtc::nodenums - 1;
         flag2 = false;
-    }
+    }*/
     if (flag2 && energy < 30) {
         MyXtc::nodenums = MyXtc::nodenums - 1;
         flag2 = false;
     }
-    if(energy<30||!flag3)
-        return;
-    nodeEnergy.record(energy);
-    energyStats.collect(energy);
-    nodenumsV.record(MyXtc::nodenums);
-    numsStats.collect(MyXtc::nodenums);
+//    if(energy<30||!flag3)
+//        return;
+
+//    counts++;
+//    if(counts==10||counts==20){
+        nodenumsV.record(MyXtc::nodenums);
+        numsStats.collect(MyXtc::nodenums);
+//    }
+//    if(counts==20){
+        nodeEnergy.record(energy);
+        energyStats.collect(energy);
+//        counts = 0;
+//    }
 }
 void MyXtc::initialDegree() {
     for (int i = 0; i < 5; i++) {
@@ -586,14 +597,24 @@ void MyXtc::forwardDataMessage(mhcMessage *msg) {
     ev << "current node is: " << idex << endl;
     ev << "msg Source is: " << msg->getSource() << endl;
     if (energy <= 30) {
+        if (flag2 && energy <= 30) {
+                MyXtc::nodenums = MyXtc::nodenums - 1;
+                flag2 = false;
+            }
+        nodenumsV.record(MyXtc::nodenums);
+        numsStats.collect(MyXtc::nodenums);
         ev << "energy is not enough to send a msg" << endl;
         delete msg;
         finish();
         return;
     }
-    if (energy > 900 && msg->getSource() == idex) {
+    if (energy>=30&&msg->getSource() == idex) {
+//        if(!flag3)
+//            return;
         ev << "generate new msg!!!!!!!!!!!!!" << endl;
+
         mhcMessage *dataMsg = generateMessage(1);
+
 //        float k = (float) simTime() + 5 + (float)intuniform(0,1);
         numSent++;
         scheduleAt(simTime() + 5 + intuniform(0, 1), dataMsg);
@@ -634,8 +655,11 @@ void MyXtc::forwardDataMessage(mhcMessage *msg) {
             break;
         }
     }
-    if(!x)
-        flag3 = false;
+    if(!x){
+        if(flag3)
+            flag3 = false;
+        energy = energy - 30;
+    }
 }
 void MyXtc::initializeNeib() {
     int i = 0;

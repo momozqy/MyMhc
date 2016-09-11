@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
+<scave:Analysis xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:scave="http://www.omnetpp.org/omnetpp/scave">
   <inputs>
     <inputs name="/MyMhc/results/FuzzyXtc-*.vec"/>
     <inputs name="/MyMhc/results/FuzzyXtc-*.sca"/>
+    <inputs name="/MyMhc/results/MAX-0.vec"/>
+    <inputs name="/MyMhc/results/MAX-0.sca"/>
   </inputs>
-  <datasets/>
-  <chartSheets/>
+  <datasets>
+    <datasets name="test">
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/FuzzyXtc-0.vec) AND attr:configname(FuzzyXtc) AND attr:runnumber(0) AND module(FuzzyXtc.node4) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:Add" filterPattern="file(/MyMhc/results/MAX-0.vec) AND attr:configname(MAX) AND attr:runnumber(0) AND module(max.node4) AND name(nodeEnergy)" type="VECTOR"/>
+      <items xsi:type="scave:LineChart" name="" lineNameFormat="">
+        <properties name="Graph.Title" value="FuzzyXTC&amp;XTC"/>
+        <properties name="X.Axis.Title" value="Energy"/>
+        <properties name="Y.Axis.Title" value="Time"/>
+      </items>
+    </datasets>
+  </datasets>
+  <chartSheets>
+    <chartSheets name="default" charts="//@datasets/@datasets.0/@items.2"/>
+  </chartSheets>
 </scave:Analysis>
